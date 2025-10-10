@@ -1,0 +1,63 @@
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+/* Specific elements that need scrolling */
+.main-content,
+.lyrics-content,
+.playlist-list,
+.music-grid,
+.playlist-songs {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+.main-content::-webkit-scrollbar-track,
+.lyrics-content::-webkit-scrollbar-track,
+.playlist-list::-webkit-scrollbar-track,
+.music-grid::-webkit-scrollbar-track,
+.playlist-songs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.main-content::-webkit-scrollbar-thumb,
+.lyrics-content::-webkit-scrollbar-thumb,
+.playlist-list::-webkit-scrollbar-thumb,
+.music-grid::-webkit-scrollbar-thumb,
+.playlist-songs::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.main-content::-webkit-scrollbar-thumb:hover,
+.lyrics-content::-webkit-scrollbar-thumb:hover,
+.playlist-list::-webkit-scrollbar-thumb:hover,
+.music-grid::-webkit-scrollbar-thumb:hover,
+.playlist-songs::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5);
+}

@@ -7,6 +7,6 @@
 
 ---
 
-Undefined Clear
-2024 - 2025
+Undefined Clear<br>
+2024 - 2025<br>
 All rights reserved!

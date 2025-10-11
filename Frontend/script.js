@@ -319,6 +319,19 @@ function setupProgressControl() {
     });
 }
 
+function updateVolumeIcon(volume) {
+    const volumeIcon = document.querySelector('.volume-control i');
+    if (!volumeIcon) return;
+    
+    if (volume === 0) {
+        volumeIcon.className = 'fas fa-volume-mute';
+    } else if (volume < 0.5) {
+        volumeIcon.className = 'fas fa-volume-down';
+    } else {
+        volumeIcon.className = 'fas fa-volume-up';
+    }
+}
+
 function setupVolumeControl() {
     const volumeContainer = document.querySelector('.volume-control .progress-bar');
     const volumeProgress = volumeContainer.querySelector('.progress');
@@ -329,19 +342,11 @@ function setupVolumeControl() {
     audio.volume = savedVolume !== null ? parseFloat(savedVolume) : 0.7;
     volumeProgress.style.width = (audio.volume * 100) + '%';
 
-    // Update volume icon based on current volume
-    function updateVolumeIcon(volume) {
-        if (volume === 0) {
-            volumeIcon.className = 'fas fa-volume-mute';
-        } else if (volume < 0.5) {
-            volumeIcon.className = 'fas fa-volume-down';
-        } else {
-            volumeIcon.className = 'fas fa-volume-up';
-        }
+    // Initialize icon and volume
+    if (audio && audio.volume !== undefined) {
+        volumeProgress.style.width = (audio.volume * 100) + '%';
+        updateVolumeIcon(audio.volume);
     }
-
-    // Initialize icon
-    updateVolumeIcon(audio.volume);
 
     volumeContainer.addEventListener('click', (e) => {
         const rect = volumeContainer.getBoundingClientRect();
@@ -402,6 +407,16 @@ function playSong(song, isPlaylist = false) {
 
     // Create new audio instance
     audio = new Audio();
+    
+    // Восстанавливаем настройки громкости
+    const savedVolume = localStorage.getItem('volume');
+    if (savedVolume !== null) {
+        audio.volume = parseFloat(savedVolume);
+        const volumeProgress = document.querySelector('.volume-control .progress-bar .progress');
+        if (volumeProgress) {
+            volumeProgress.style.width = (audio.volume * 100) + '%';
+        }
+    }
     
     // Add event listeners
     audio.addEventListener('error', (e) => {

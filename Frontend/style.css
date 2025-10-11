@@ -81,6 +81,25 @@ body {
     margin-bottom: 24px;
 }
 
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-right: 16px;
+}
+
+#username-display {
+    font-weight: bold;
+    color: var(--primary);
+    white-space: nowrap;
+}
+
 .search-bar {
     background-color: var(--surface-variant);
     border: 1px solid transparent;
@@ -348,7 +367,7 @@ body {
 .play-pause-btn:hover {
     background: var(--primary-light) !important;
     color: var(--on-primary) !important;
-    transform: scale(1.1);
+    transform: scale(1.01);
 }
 
 .time-control {
@@ -745,20 +764,39 @@ body {
     font-weight: 500;
 }
 
+
+/* .nav-menu a {
+    display: flex;
+    align-items: center;
+    color: var(--on-surface-variant);
+    text-decoration: none;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.nav-menu a:hover {
+    color: var(--primary);
+    background-color: var(--elevation-1);
+    border-radius: 4px;
+    padding-left: 8px;
+} */
+
 .delete-playlist-btn:hover {
     color: #ff4444;
     background: rgba(255, 68, 68, 0.1);
 }
 
-.play-all-btn {
-    background: var(--primary);
-    color: white;
+.play-all-btn:hover {
+    color: var(--primary);
+    background: rgba(255, 68, 68, 0.1);
 }
 
-.play-all-btn:hover {
+/* .play-all-btn:hover {
     background: var(--primary-light);
     transform: scale(1.02);
-}
+} */
 
 .control-btn {
     background: none;

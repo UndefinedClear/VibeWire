@@ -51,9 +51,14 @@
                 </div>
                 <div class="user-menu">
                     <span id="username-display"></span>
-                    <space style="margin-left: 30px;"></space>
-                    <button onclick="showUploadForm()" class="upload-btn" title="Support: MP3, WAV, OGG (max 10MB)">
+
+                    <space style="margin-left: 10px;"></space>
+
+                    <button onclick="showUploadForm()" class="upload-btn" title="Support: MP3, WAV, OGG (max 40MB)">
                         <i class="fas fa-upload"></i> Upload Song
+                    </button>
+                    <button onclick="unlogin()" class="delete-playlist-btn">
+                        <i class="fas fa-sign-out-alt"></i> Unlogin
                     </button>
                 </div>
             </header>
@@ -79,10 +84,11 @@
 
         <footer class="player">
             <div class="now-playing">
-                <img src="https://via.placeholder.com/56" alt="Album Cover" id="current-track-image">
+                <img src="https://static.hitmcdn.com/static/images/no-cover-150.jpg" alt="" id="current-track-image">
+                <!-- <img src="https://via.placeholder.com/56" alt="Album Cover" id="current-track-image"> -->
                 <div class="track-info">
                     <h4 id="current-track-name">No track playing</h4>
-                    <p id="current-track-artist">-</p>
+                    <p id="current-track-artist">No Author</p>
                 </div>
             </div>
             <div class="player-controls">

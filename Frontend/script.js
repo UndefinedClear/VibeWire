@@ -1,11 +1,20 @@
-let token = null;
-let userId = null;
+let token = localStorage.getItem('token') || null;
+let userId = localStorage.getItem('userId') || null;
 let currentlyPlaying = null;
 let audio = new Audio();
 let currentPlaylist = null;
 let currentPlaylistIndex = -1;
 
 const API = 'http://localhost:3001';
+
+// Check if user is already logged in
+if (token && userId) {
+    document.getElementById('auth').style.display = 'none';
+    document.getElementById('main').style.display = 'grid';
+    document.getElementById('username-display').textContent = localStorage.getItem('username') || '';
+    loadMusic();
+    loadPlaylists();
+}
 
 // Playlist playback controls
 function playNextSong() {
@@ -33,8 +42,15 @@ function updatePlayButtons() {
 
 // Auth Functions
 function register() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    // Проверка на пустые поля
+    if (!username || !password) {
+        document.getElementById('auth-msg').innerText = 'Username and password cannot be empty!';
+        return;
+    }
+
     fetch(`${API}/register`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -47,8 +63,14 @@ function register() {
 }
 
 function login() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    // Проверка на пустые поля
+    if (!username || !password) {
+        document.getElementById('auth-msg').innerText = 'Username and password cannot be empty!';
+        return;
+    }
     fetch(`${API}/login`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -59,6 +81,12 @@ function login() {
         if (data.success) {
             token = data.token;
             userId = data.userId;
+            
+            // Store in localStorage
+            localStorage.setItem('token', token);
+            localStorage.setItem('userId', userId);
+            localStorage.setItem('username', username);
+            
             document.getElementById('auth').style.display = 'none';
             document.getElementById('main').style.display = 'grid';
             document.getElementById('username-display').textContent = username;
@@ -68,6 +96,33 @@ function login() {
             document.getElementById('auth-msg').innerText = data.message;
         }
     });
+}
+
+function unlogin() {
+    // Clear localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    
+    // Reset variables
+    token = null;
+    userId = null;
+    
+    // Stop any playing music
+    if (audio) {
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.load();
+    }
+    
+    // Reset UI
+    document.getElementById('auth').style.display = 'flex';
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('auth-msg').innerText = '';
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+
+    location.reload();
 }
 
 // Music Functions
@@ -126,21 +181,33 @@ function createMusicCard(song) {
             <button class="play-btn">
                 <i class="fas fa-play"></i>
             </button>
-            <button onclick="showLyrics(${JSON.stringify(song)})" title="View Lyrics">
+            <button class="lyrics-btn" title="View Lyrics">
                 <i class="fas fa-align-left"></i>
             </button>
-            <button onclick="addToPlaylist(${song.id})" title="Add to Playlist">
+            <button class="add-to-playlist-btn" title="Add to Playlist">
                 <i class="fas fa-plus"></i>
             </button>
         </div>
     `;
     
-    // Add click event listener for play button
+    // Add click event listeners for all buttons
     const playBtn = card.querySelector('.play-btn');
+    const lyricsBtn = card.querySelector('.lyrics-btn');
+    const addToPlaylistBtn = card.querySelector('.add-to-playlist-btn');
+
     playBtn.addEventListener('click', () => {
         const songData = JSON.parse(card.dataset.song);
         playSong(songData);
     });
+
+    lyricsBtn.addEventListener('click', () => {
+        showLyrics(song);
+    });
+
+    addToPlaylistBtn.addEventListener('click', () => {
+        addToPlaylist(song.id);
+    });
+
     return card;
 }
 
@@ -257,37 +324,55 @@ function setupVolumeControl() {
     const volumeProgress = volumeContainer.querySelector('.progress');
     const volumeIcon = document.querySelector('.volume-control i');
     
-    // Set initial volume
-    audio.volume = 0.7;
+    // Get volume from localStorage or use default
+    const savedVolume = localStorage.getItem('volume');
+    audio.volume = savedVolume !== null ? parseFloat(savedVolume) : 0.7;
     volumeProgress.style.width = (audio.volume * 100) + '%';
 
-    volumeContainer.addEventListener('click', (e) => {
-        const rect = volumeContainer.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        audio.volume = Math.max(0, Math.min(1, percent));
-        volumeProgress.style.width = (audio.volume * 100) + '%';
-        
-        // Update volume icon
-        if (audio.volume === 0) {
+    // Update volume icon based on current volume
+    function updateVolumeIcon(volume) {
+        if (volume === 0) {
             volumeIcon.className = 'fas fa-volume-mute';
-        } else if (audio.volume < 0.5) {
+        } else if (volume < 0.5) {
             volumeIcon.className = 'fas fa-volume-down';
         } else {
             volumeIcon.className = 'fas fa-volume-up';
         }
+    }
+
+    // Initialize icon
+    updateVolumeIcon(audio.volume);
+
+    volumeContainer.addEventListener('click', (e) => {
+        const rect = volumeContainer.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        const newVolume = Math.max(0, Math.min(1, percent));
+        
+        // Update audio volume and UI
+        audio.volume = newVolume;
+        volumeProgress.style.width = (newVolume * 100) + '%';
+        updateVolumeIcon(newVolume);
+        
+        // Save to localStorage
+        localStorage.setItem('volume', newVolume);
     });
 
     // Toggle mute on icon click
     volumeIcon.addEventListener('click', () => {
         if (audio.volume > 0) {
-            audio.dataset.lastVolume = audio.volume;
+            // Store current volume before muting
+            localStorage.setItem('lastVolume', audio.volume);
             audio.volume = 0;
             volumeProgress.style.width = '0%';
             volumeIcon.className = 'fas fa-volume-mute';
+            localStorage.setItem('volume', 0);
         } else {
-            audio.volume = audio.dataset.lastVolume || 1;
-            volumeProgress.style.width = (audio.volume * 100) + '%';
-            volumeIcon.className = audio.volume < 0.5 ? 'fas fa-volume-down' : 'fas fa-volume-up';
+            // Restore last volume
+            const lastVolume = parseFloat(localStorage.getItem('lastVolume')) || 1;
+            audio.volume = lastVolume;
+            volumeProgress.style.width = (lastVolume * 100) + '%';
+            updateVolumeIcon(lastVolume);
+            localStorage.setItem('volume', lastVolume);
         }
     });
 }
@@ -550,21 +635,49 @@ function showLyrics(song) {
     const modal = document.createElement('div');
     modal.className = 'lyrics-modal';
     
-    const lyrics = song.lyrics ? song.lyrics.split('\n').map(line => 
-        `<p>${line || '&nbsp;'}</p>`).join('') : '<p class="no-lyrics">No lyrics available</p>';
+    // Функция для безопасного экранирования HTML
+    const escapeHtml = (text) => {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    };
     
-    modal.innerHTML = `
-        <div class="lyrics-header">
-            <h3>${song.name}</h3>
-            <p class="text-gray">${song.author}</p>
-            <button class="close-btn" onclick="this.closest('.lyrics-modal').remove()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="lyrics-content">
-            ${lyrics}
-        </div>
+    // Безопасное форматирование текста песни
+    let lyricsHtml;
+    if (song.lyrics) {
+        // Экранируем каждую строку и оборачиваем в параграф
+        lyricsHtml = song.lyrics
+            .split('\n')
+            .map(line => `<p>${escapeHtml(line) || '&nbsp;'}</p>`)
+            .join('');
+    } else {
+        lyricsHtml = '<p class="no-lyrics">No lyrics available</p>';
+    }
+    
+    // Создаем структуру модального окна
+    const header = document.createElement('div');
+    header.className = 'lyrics-header';
+    header.innerHTML = `
+        <h3>${escapeHtml(song.name)}</h3>
+        <p class="text-gray">${escapeHtml(song.author)}</p>
     `;
+    
+    // Добавляем кнопку закрытия
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-btn';
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    closeBtn.addEventListener('click', () => modal.remove());
+    header.appendChild(closeBtn);
+    
+    // Создаем контейнер для текста
+    const content = document.createElement('div');
+    content.className = 'lyrics-content';
+    content.innerHTML = lyricsHtml;
+    
+    // Собираем всё вместе
+    modal.appendChild(header);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
     
     document.body.appendChild(modal);
 }
@@ -721,8 +834,15 @@ function showMainView() {
             </div>
             <div class="user-menu">
                 <span id="username-display"></span>
+
+                <space style="margin-left: 10px;"></space>
+
                 <button onclick="showUploadForm()" class="upload-btn" title="Support: MP3, WAV, OGG (max 10MB)">
                     <i class="fas fa-upload"></i> Upload Song
+                </button>
+
+                <button onclick="unlogin()" class="delete-playlist-btn">
+                    <i class="fas fa-sign-out-alt"></i> Unlogin
                 </button>
             </div>
         </header>
@@ -732,6 +852,8 @@ function showMainView() {
             <div class="music-grid" id="music-list"></div>
         </section>
     `;
+    // Восстанавливаем имя пользователя
+    document.getElementById('username-display').textContent = localStorage.getItem('username') || '';
     loadMusic();
 }
 

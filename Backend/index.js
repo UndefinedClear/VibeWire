@@ -76,6 +76,24 @@ const db = new sqlite3.Database(db_path, (err) => {
   console.log('Connected to SQLite database.');
 });
 
+// Simple input sanitizer to prevent stored XSS: removes <script> tags,
+// strips HTML tags and event handler attributes like onerror, onclick, etc.
+const sanitizeInput = (value) => {
+  if (typeof value !== 'string') return value;
+  let v = value;
+  // Remove <script>...</script>
+  v = v.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+  // Remove image tags completely
+  v = v.replace(/<img[\s\S]*?>/gi, '');
+  // Remove inline event handlers e.g. onerror="..." or onclick='...'
+  v = v.replace(/on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+  // Remove javascript: URIs
+  v = v.replace(/javascript:\s*[^\s"'>]*/gi, '');
+  // Strip any remaining HTML tags
+  v = v.replace(/<[^>]+>/g, '');
+  return v.trim();
+};
+
 // Migration function to update the playlists table
 const migratePlaylistsTable = () => {
   console.log('Starting playlists table migration...');
@@ -207,7 +225,8 @@ app.get('/', (req, res) => {
 // Register
 app.post('/register', (req, res) => {
   const { username, password } = req.body;
-  db.run('INSERT INTO accounts (username, password) VALUES (?, ?)', [username, password], function(err) {
+  const safeUsername = sanitizeInput(username);
+  db.run('INSERT INTO accounts (username, password) VALUES (?, ?)', [safeUsername, password], function(err) {
     if (err) return res.json({ success: false, message: 'Username taken.' });
     res.json({ success: true, message: 'Registered successfully.' });
   });
@@ -216,7 +235,8 @@ app.post('/register', (req, res) => {
 // Login
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  db.get('SELECT * FROM accounts WHERE username = ? AND password = ?', [username, password], (err, row) => {
+  const safeUsername = sanitizeInput(username);
+  db.get('SELECT * FROM accounts WHERE username = ? AND password = ?', [safeUsername, password], (err, row) => {
     if (row) {
       res.json({ success: true, userId: row.id, token: 'dummy-token', message: 'Login successful.' });
     } else {
@@ -252,9 +272,17 @@ app.post('/music', upload.single('audioFile'), (req, res) => {
       return res.status(400).json({ success: false, error: 'Audio file is required' });
     }
 
-    const { name, author, description, lyrics, cover_url } = req.body;
-    
-    if (!name || !author) {
+      const { name, author, description, lyrics, cover_url } = req.body;
+      const safeName = sanitizeInput(name);
+      const safeAuthor = sanitizeInput(author);
+      const safeDescription = sanitizeInput(description);
+      const safeLyrics = sanitizeInput(lyrics);
+      const safeCover = sanitizeInput(cover_url);
+      // Default cover image when none provided
+      const defaultCover = 'https://static.hitmcdn.com/static/images/no-cover-150.jpg';
+      const finalCover = safeCover && safeCover.length ? safeCover : defaultCover;
+
+      if (!safeName || !safeAuthor) {
       // Remove uploaded file if validation fails
       fs.unlinkSync(req.file.path);
       return res.status(400).json({ success: false, error: 'Name and author are required' });
@@ -265,7 +293,7 @@ app.post('/music', upload.single('audioFile'), (req, res) => {
 
     db.run(
       'INSERT INTO music (name, author, description, lyrics, cover_url, audio_path) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, author, description, lyrics, cover_url, audio_path],
+      [safeName, safeAuthor, safeDescription, safeLyrics, finalCover, audio_path],
       function(err) {
         if (err) {
           // Remove uploaded file if database insert fails
@@ -278,11 +306,11 @@ app.post('/music', upload.single('audioFile'), (req, res) => {
           id: this.lastID,
           song: {
             id: this.lastID,
-            name,
-            author,
-            description,
-            lyrics,
-            cover_url,
+            name: safeName,
+            author: safeAuthor,
+            description: safeDescription,
+            lyrics: safeLyrics,
+            cover_url: finalCover,
             audio_path
           }
         });
@@ -301,12 +329,14 @@ app.post('/music', upload.single('audioFile'), (req, res) => {
 // Create playlist
 app.post('/playlists', (req, res) => {
   const { name, description, userId } = req.body;
-  if (!name) {
+  const safeName = sanitizeInput(name);
+  const safeDescription = sanitizeInput(description);
+  if (!safeName) {
     return res.status(400).json({ success: false, error: 'Playlist name is required' });
   }
-  
+
   db.run('INSERT INTO playlists (name, description, user_id) VALUES (?, ?, ?)', 
-    [name, description || null, userId], 
+    [safeName, safeDescription || null, userId], 
     function(err) {
       if (err) {
         console.error('Error creating playlist:', err);
@@ -415,7 +445,8 @@ app.get('/comments', (req, res) => {
 // Add comment
 app.post('/comments', (req, res) => {
   const { userId, text } = req.body;
-  db.run('INSERT INTO comments (user_id, text) VALUES (?, ?)', [userId, text], function(err) {
+  const safeText = sanitizeInput(text);
+  db.run('INSERT INTO comments (user_id, text) VALUES (?, ?)', [userId, safeText], function(err) {
     res.json({ success: !err, id: this.lastID });
   });
 });

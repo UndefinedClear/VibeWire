@@ -650,31 +650,24 @@ function showLyrics(song) {
     const modal = document.createElement('div');
     modal.className = 'lyrics-modal';
     
-    // Функция для безопасного экранирования HTML
-    const escapeHtml = (text) => {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    };
-    
-    // Безопасное форматирование текста песни
+    // Server performs sanitization; render values directly
+    // Форматирование текста песни (сервер уже очистил HTML)
     let lyricsHtml;
     if (song.lyrics) {
-        // Экранируем каждую строку и оборачиваем в параграф
         lyricsHtml = song.lyrics
             .split('\n')
-            .map(line => `<p>${escapeHtml(line) || '&nbsp;'}</p>`)
+            .map(line => `<p>${line || '&nbsp;'}</p>`)
             .join('');
     } else {
         lyricsHtml = '<p class="no-lyrics">No lyrics available</p>';
     }
-    
+
     // Создаем структуру модального окна
     const header = document.createElement('div');
     header.className = 'lyrics-header';
     header.innerHTML = `
-        <h3>${escapeHtml(song.name)}</h3>
-        <p class="text-gray">${escapeHtml(song.author)}</p>
+        <h3>${song.name}</h3>
+        <p class="text-gray">${song.author}</p>
     `;
     
     // Добавляем кнопку закрытия
@@ -692,8 +685,6 @@ function showLyrics(song) {
     // Собираем всё вместе
     modal.appendChild(header);
     modal.appendChild(content);
-    document.body.appendChild(modal);
-    
     document.body.appendChild(modal);
 }
 

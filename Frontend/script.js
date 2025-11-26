@@ -828,30 +828,32 @@ function addComment() {
     .then(() => loadComments());
 }
 
+        // <header class="header">
+        //     <div class="search-container">
+        //         <input type="text" class="search-bar" id="search-song" 
+        //                placeholder="Search for Songs, Artists, or Playlists"
+        //                onkeyup="debounceSearch(event)">
+        //         <i class="fas fa-search search-icon"></i>
+        //     </div>
+        //     <div class="user-menu">
+        //         <span id="username-display"></span>
+
+        //         <space style="margin-left: 10px;"></space>
+
+        //         <button onclick="showUploadForm()" class="upload-btn" title="Support: MP3, WAV, OGG (max 10MB)">
+        //             <i class="fas fa-upload"></i> Upload Song
+        //         </button>
+
+        //         <button onclick="unlogin()" class="delete-playlist-btn">
+        //             <i class="fas fa-sign-out-alt"></i> Unlogin
+        //         </button>
+        //     </div>
+        // </header>
+
 function showMainView() {
     const mainContent = document.querySelector('.main-content');
     mainContent.innerHTML = `
-        <header class="header">
-            <div class="search-container">
-                <input type="text" class="search-bar" id="search-song" 
-                       placeholder="Search for Songs, Artists, or Playlists"
-                       onkeyup="debounceSearch(event)">
-                <i class="fas fa-search search-icon"></i>
-            </div>
-            <div class="user-menu">
-                <span id="username-display"></span>
 
-                <space style="margin-left: 10px;"></space>
-
-                <button onclick="showUploadForm()" class="upload-btn" title="Support: MP3, WAV, OGG (max 10MB)">
-                    <i class="fas fa-upload"></i> Upload Song
-                </button>
-
-                <button onclick="unlogin()" class="delete-playlist-btn">
-                    <i class="fas fa-sign-out-alt"></i> Unlogin
-                </button>
-            </div>
-        </header>
 
         <section class="featured-content">
             <h2>Featured</h2>

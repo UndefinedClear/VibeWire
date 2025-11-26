@@ -29,7 +29,7 @@ const storage = multer.diskStorage({
 });
 
 
-const fileMaxSize = 40 * 1024 * 1024 // 10MB limit
+const fileMaxSize = 40 * 1024 * 1024 // 40MB limit
 
 
 const upload = multer({ 
@@ -57,7 +57,7 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ success: false, error: 'File is too large. Maximum size is 10MB.' });
+      return res.status(400).json({ success: false, error: 'File is too large. Maximum size is 40MB.' });
     }
     return res.status(400).json({ success: false, error: err.message });
   }
@@ -243,6 +243,12 @@ app.post('/login', (req, res) => {
       res.json({ success: false, message: 'Invalid credentials.' });
     }
   });
+});
+
+app.get('/assets/:filename', (req, res) => {
+  path_ = path.join(__dirname, req.params.filename);
+
+  res.sendFile(path_);
 });
 
 // Get all music

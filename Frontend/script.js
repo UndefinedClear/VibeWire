@@ -53,13 +53,13 @@ function register() {
 
     fetch(`${API}/register`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({username, password})
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
     })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById('auth-msg').innerText = data.message;
-    });
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('auth-msg').innerText = data.message;
+        });
 }
 
 function login() {
@@ -73,29 +73,31 @@ function login() {
     }
     fetch(`${API}/login`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({username, password})
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            token = data.token;
-            userId = data.userId;
-            
-            // Store in localStorage
-            localStorage.setItem('token', token);
-            localStorage.setItem('userId', userId);
-            localStorage.setItem('username', username);
-            
-            document.getElementById('auth').style.display = 'none';
-            document.getElementById('main').style.display = 'grid';
-            document.getElementById('username-display').textContent = username;
-            loadMusic();
-            loadPlaylists();
-        } else {
-            document.getElementById('auth-msg').innerText = data.message;
-        }
-    });
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                token = data.token;
+                userId = data.userId;
+
+                // Store in localStorage
+                localStorage.setItem('token', token);
+                localStorage.setItem('userId', userId);
+                localStorage.setItem('username', username);
+
+                currentUser = { username: username, userId: userId };
+
+                document.getElementById('auth').style.display = 'none';
+                document.getElementById('main').style.display = 'grid';
+                document.getElementById('username-display').textContent = username;
+                loadMusic();
+                loadPlaylists();
+            } else {
+                document.getElementById('auth-msg').innerText = data.message;
+            }
+        });
 }
 
 function unlogin() {
@@ -103,18 +105,18 @@ function unlogin() {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
     localStorage.removeItem('username');
-    
+
     // Reset variables
     token = null;
     userId = null;
-    
+
     // Stop any playing music
     if (audio) {
         audio.pause();
         audio.removeAttribute('src');
         audio.load();
     }
-    
+
     // Reset UI
     document.getElementById('auth').style.display = 'flex';
     document.getElementById('main').style.display = 'none';
@@ -138,41 +140,41 @@ function debounceSearch(event) {
 function searchSongs(query) {
     const url = query ? `${API}/music?search=${encodeURIComponent(query)}` : `${API}/music`;
     fetch(url)
-    .then(res => res.json())
-    .then(data => {
-        const grid = document.getElementById('music-list');
-        grid.innerHTML = '';
-        if (data.length === 0) {
-            grid.innerHTML = '<div class="no-results">No songs found</div>';
-            return;
-        }
-        data.forEach(song => {
-            const card = createMusicCard(song);
-            grid.appendChild(card);
+        .then(res => res.json())
+        .then(data => {
+            const grid = document.getElementById('music-list');
+            grid.innerHTML = '';
+            if (data.length === 0) {
+                grid.innerHTML = '<div class="no-results">No songs found</div>';
+                return;
+            }
+            data.forEach(song => {
+                const card = createMusicCard(song);
+                grid.appendChild(card);
+            });
         });
-    });
 }
 
 function loadMusic() {
     fetch(`${API}/music`)
-    .then(res => res.json())
-    .then(data => {
-        const grid = document.getElementById('music-list');
-        grid.innerHTML = '';
-        data.forEach(song => {
-            const card = createMusicCard(song);
-            grid.appendChild(card);
+        .then(res => res.json())
+        .then(data => {
+            const grid = document.getElementById('music-list');
+            grid.innerHTML = '';
+            data.forEach(song => {
+                const card = createMusicCard(song);
+                grid.appendChild(card);
+            });
         });
-    });
 }
 
 function createMusicCard(song) {
     const card = document.createElement('div');
     card.className = 'music-card';
-    
+
     // Create a data attribute to store the song data
     card.dataset.song = JSON.stringify(song);
-    
+
     card.innerHTML = `
         <img src="${song.cover_url || 'https://via.placeholder.com/150'}" alt="${song.name} cover">
         <h3>${song.name}</h3>
@@ -189,7 +191,7 @@ function createMusicCard(song) {
             </button>
         </div>
     `;
-    
+
     // Add click event listeners for all buttons
     const playBtn = card.querySelector('.play-btn');
     const lyricsBtn = card.querySelector('.lyrics-btn');
@@ -299,7 +301,7 @@ function updateProgress() {
     const progressBar = document.querySelector('.progress');
     const currentTime = document.getElementById('current-time');
     const totalTime = document.getElementById('total-time');
-    
+
     if (audio.duration) {
         const percent = (audio.currentTime / audio.duration) * 100;
         progressBar.style.width = percent + '%';
@@ -310,7 +312,7 @@ function updateProgress() {
 
 function setupProgressControl() {
     const progressContainer = document.querySelector('.progress-bar');
-    
+
     progressContainer.addEventListener('click', (e) => {
         const rect = progressContainer.getBoundingClientRect();
         const percent = (e.clientX - rect.left) / rect.width;
@@ -322,7 +324,7 @@ function setupProgressControl() {
 function updateVolumeIcon(volume) {
     const volumeIcon = document.querySelector('.volume-control i');
     if (!volumeIcon) return;
-    
+
     if (volume === 0) {
         volumeIcon.className = 'fas fa-volume-mute';
     } else if (volume < 0.5) {
@@ -336,7 +338,7 @@ function setupVolumeControl() {
     const volumeContainer = document.querySelector('.volume-control .progress-bar');
     const volumeProgress = volumeContainer.querySelector('.progress');
     const volumeIcon = document.querySelector('.volume-control i');
-    
+
     // Get volume from localStorage or use default
     const savedVolume = localStorage.getItem('volume');
     audio.volume = savedVolume !== null ? parseFloat(savedVolume) : 0.7;
@@ -352,12 +354,12 @@ function setupVolumeControl() {
         const rect = volumeContainer.getBoundingClientRect();
         const percent = (e.clientX - rect.left) / rect.width;
         const newVolume = Math.max(0, Math.min(1, percent));
-        
+
         // Update audio volume and UI
         audio.volume = newVolume;
         volumeProgress.style.width = (newVolume * 100) + '%';
         updateVolumeIcon(newVolume);
-        
+
         // Save to localStorage
         localStorage.setItem('volume', newVolume);
     });
@@ -407,7 +409,7 @@ function playSong(song, isPlaylist = false) {
 
     // Create new audio instance
     audio = new Audio();
-    
+
     // Восстанавливаем настройки громкости
     const savedVolume = localStorage.getItem('volume');
     if (savedVolume !== null) {
@@ -417,7 +419,7 @@ function playSong(song, isPlaylist = false) {
             volumeProgress.style.width = (audio.volume * 100) + '%';
         }
     }
-    
+
     // Add event listeners
     audio.addEventListener('error', (e) => {
         console.error('Audio error:', e);
@@ -463,7 +465,7 @@ function playSong(song, isPlaylist = false) {
     audio.src = song.audio_path ? `${API}/${song.audio_path}` : song.audio_url;
     currentlyPlaying = song.id;
     currentSong = song;
-    
+
     // Update playlist tracking if this is a playlist song
     if (isPlaylist && currentPlaylist) {
         currentPlaylistIndex = currentPlaylist.findIndex(s => s.id === song.id);
@@ -476,7 +478,7 @@ function playSong(song, isPlaylist = false) {
 
 function togglePlayPause() {
     if (!audio.src) return;
-    
+
     if (audio.paused) {
         audio.play().catch(error => {
             console.error('Error playing audio:', error);
@@ -491,7 +493,7 @@ function togglePlayPause() {
 function showCreatePlaylistModal() {
     const modal = document.createElement('div');
     modal.className = 'create-playlist-modal';
-    
+
     modal.innerHTML = `
         <div class="modal-content">
             <h3>Create New Playlist</h3>
@@ -513,18 +515,18 @@ function showCreatePlaylistModal() {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
 
     // Add character counters
     const nameInput = modal.querySelector('#new-playlist-name');
     const descInput = modal.querySelector('#new-playlist-description');
-    
+
     nameInput.addEventListener('input', () => {
         const counter = nameInput.parentElement.querySelector('.char-counter');
         counter.textContent = `${nameInput.value.length}/50`;
     });
-    
+
     descInput.addEventListener('input', () => {
         const counter = descInput.parentElement.querySelector('.char-counter');
         counter.textContent = `${descInput.value.length}/200`;
@@ -537,56 +539,56 @@ function showCreatePlaylistModal() {
 function createPlaylist() {
     const name = document.getElementById('new-playlist-name').value.trim();
     const description = document.getElementById('new-playlist-description').value.trim();
-    
+
     if (!name) {
         showNotification('Please enter a playlist name', 'error');
         return;
     }
-    
+
     fetch(`${API}/playlists`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             name,
             description,
             userId
         })
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            document.querySelector('.create-playlist-modal').remove();
-            showNotification(`Playlist "${name}" created`);
-            loadPlaylists();
-        } else {
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('.create-playlist-modal').remove();
+                showNotification(`Playlist "${name}" created`);
+                loadPlaylists();
+            } else {
+                showNotification('Failed to create playlist', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
             showNotification('Failed to create playlist', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Failed to create playlist', 'error');
-    });
+        });
 }
 
 function formatDate(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
     });
 }
 
 function loadPlaylists() {
     fetch(`${API}/playlists?userId=${userId}`)
-    .then(res => res.json())
-    .then(data => {
-        const list = document.getElementById('playlists');
-        list.innerHTML = '';
-        data.forEach(p => {
-            const div = document.createElement('div');
-            div.className = 'playlist-item';
-            div.innerHTML = `
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById('playlists');
+            list.innerHTML = '';
+            data.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'playlist-item';
+                div.innerHTML = `
                 <i class="fas fa-music"></i>
                 <div class="playlist-info">
                     <span class="playlist-name">${p.name}</span>
@@ -601,55 +603,55 @@ function loadPlaylists() {
                     <i class="fas fa-play"></i>
                 </button>
             `;
-            list.appendChild(div);
+                list.appendChild(div);
+            });
         });
-    });
 }
 
 function addToPlaylist(musicId) {
     fetch(`${API}/playlists?userId=${userId}`)
-    .then(res => res.json())
-    .then(playlists => {
-        const modal = document.createElement('div');
-        modal.className = 'playlist-modal';
-        
-        let html = '<h3>Add to Playlist</h3><div class="playlist-list">';
-        playlists.forEach(p => {
-            html += `
+        .then(res => res.json())
+        .then(playlists => {
+            const modal = document.createElement('div');
+            modal.className = 'playlist-modal';
+
+            let html = '<h3>Add to Playlist</h3><div class="playlist-list">';
+            playlists.forEach(p => {
+                html += `
                 <div class="playlist-option" onclick="addSongToPlaylist(${musicId}, ${p.id}, '${p.name}')">
                     <i class="fas fa-list"></i>
                     <span>${p.name}</span>
                 </div>
             `;
+            });
+            html += '</div><button onclick="this.parentElement.remove()">Cancel</button>';
+
+            modal.innerHTML = html;
+            document.body.appendChild(modal);
         });
-        html += '</div><button onclick="this.parentElement.remove()">Cancel</button>';
-        
-        modal.innerHTML = html;
-        document.body.appendChild(modal);
-    });
 }
 
 function addSongToPlaylist(musicId, playlistId, playlistName) {
     fetch(`${API}/playlist_music`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({playlistId, musicId})
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playlistId, musicId })
     })
-    .then(res => res.json())
-    .then(data => {
-        document.querySelector('.playlist-modal').remove();
-        if (data.success) {
-            showNotification(`Added to ${playlistName}`);
-        } else {
-            showNotification('Failed to add to playlist', 'error');
-        }
-    });
+        .then(res => res.json())
+        .then(data => {
+            document.querySelector('.playlist-modal').remove();
+            if (data.success) {
+                showNotification(`Added to ${playlistName}`);
+            } else {
+                showNotification('Failed to add to playlist', 'error');
+            }
+        });
 }
 
 function showLyrics(song) {
     const modal = document.createElement('div');
     modal.className = 'lyrics-modal';
-    
+
     // Server performs sanitization; render values directly
     // Форматирование текста песни (сервер уже очистил HTML)
     let lyricsHtml;
@@ -669,19 +671,19 @@ function showLyrics(song) {
         <h3>${song.name}</h3>
         <p class="text-gray">${song.author}</p>
     `;
-    
+
     // Добавляем кнопку закрытия
     const closeBtn = document.createElement('button');
     closeBtn.className = 'close-btn';
     closeBtn.innerHTML = '<i class="fas fa-times"></i>';
     closeBtn.addEventListener('click', () => modal.remove());
     header.appendChild(closeBtn);
-    
+
     // Создаем контейнер для текста
     const content = document.createElement('div');
     content.className = 'lyrics-content';
     content.innerHTML = lyricsHtml;
-    
+
     // Собираем всё вместе
     modal.appendChild(header);
     modal.appendChild(content);
@@ -693,7 +695,7 @@ function showNotification(message, type = 'success') {
     notification.className = `notification ${type}`;
     notification.textContent = message;
     document.body.appendChild(notification);
-    
+
     setTimeout(() => {
         notification.classList.add('fade-out');
         setTimeout(() => notification.remove(), 300);
@@ -703,21 +705,21 @@ function showNotification(message, type = 'success') {
 function viewPlaylist(id, name) {
     // First fetch playlist details
     fetch(`${API}/playlists?userId=${userId}`)
-    .then(res => res.json())
-    .then(playlists => {
-        const playlist = playlists.find(p => p.id === id);
-        
-        // Then fetch playlist songs
-        return fetch(`${API}/playlist_music?playlistId=${id}`)
-            .then(res => res.json())
-            .then(data => ({ playlist, songs: data }));
-    })
-    .then(({ playlist, songs: data }) => {
-        currentPlaylist = data;
-        currentPlaylistIndex = -1;
+        .then(res => res.json())
+        .then(playlists => {
+            const playlist = playlists.find(p => p.id === id);
 
-        const mainContent = document.querySelector('.main-content');
-        mainContent.innerHTML = `
+            // Then fetch playlist songs
+            return fetch(`${API}/playlist_music?playlistId=${id}`)
+                .then(res => res.json())
+                .then(data => ({ playlist, songs: data }));
+        })
+        .then(({ playlist, songs: data }) => {
+            currentPlaylist = data;
+            currentPlaylistIndex = -1;
+
+            const mainContent = document.querySelector('.main-content');
+            mainContent.innerHTML = `
             <header class="playlist-header">
                 <button onclick="showMainView()" class="back-btn">
                     <i class="fas fa-arrow-left"></i> Back
@@ -745,17 +747,17 @@ function viewPlaylist(id, name) {
             <div class="playlist-songs"></div>
         `;
 
-        const songsContainer = mainContent.querySelector('.playlist-songs');
-        if (data.length === 0) {
-            songsContainer.innerHTML = '<div class="no-songs">No songs in this playlist</div>';
-            return;
-        }
+            const songsContainer = mainContent.querySelector('.playlist-songs');
+            if (data.length === 0) {
+                songsContainer.innerHTML = '<div class="no-songs">No songs in this playlist</div>';
+                return;
+            }
 
-        data.forEach((song, index) => {
-            const songDiv = document.createElement('div');
-            songDiv.className = 'playlist-song-item';
-            songDiv.dataset.songId = song.id;
-            songDiv.innerHTML = `
+            data.forEach((song, index) => {
+                const songDiv = document.createElement('div');
+                songDiv.className = 'playlist-song-item';
+                songDiv.dataset.songId = song.id;
+                songDiv.innerHTML = `
                 <div class="song-number">${index + 1}</div>
                 <img src="${song.cover_url || 'https://via.placeholder.com/40'}" alt="${song.name} cover">
                 <div class="song-info">
@@ -774,9 +776,9 @@ function viewPlaylist(id, name) {
                     </button>
                 </div>
             `;
-            songsContainer.appendChild(songDiv);
+                songsContainer.appendChild(songDiv);
+            });
         });
-    });
 }
 
 function deletePlaylist(id, name) {
@@ -785,16 +787,16 @@ function deletePlaylist(id, name) {
     fetch(`${API}/playlists/${id}`, {
         method: 'DELETE'
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(`Playlist "${name}" deleted`);
-            showMainView();
-            loadPlaylists();
-        } else {
-            showNotification('Failed to delete playlist', 'error');
-        }
-    });
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(`Playlist "${name}" deleted`);
+                showMainView();
+                loadPlaylists();
+            } else {
+                showNotification('Failed to delete playlist', 'error');
+            }
+        });
 }
 
 function playAllSongs() {
@@ -804,51 +806,51 @@ function playAllSongs() {
 }
 
 function loadComments() {
-  fetch(`${API}/comments`)
-    .then(res => res.json())
-    .then(data => {
-      const list = document.getElementById('comments');
-      list.innerHTML = '';
-      data.forEach(c => {
-        const div = document.createElement('div');
-        div.innerHTML = `<b>User ${c.user_id}</b>: ${c.text}`;
-        list.appendChild(div);
-      });
-    });
+    fetch(`${API}/comments`)
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById('comments');
+            list.innerHTML = '';
+            data.forEach(c => {
+                const div = document.createElement('div');
+                div.innerHTML = `<b>User ${c.user_id}</b>: ${c.text}`;
+                list.appendChild(div);
+            });
+        });
 }
 
 function addComment() {
     const text = document.getElementById('comment-text').value;
     fetch(`${API}/comments`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({userId, text})
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, text })
     })
-    .then(res => res.json())
-    .then(() => loadComments());
+        .then(res => res.json())
+        .then(() => loadComments());
 }
 
-        // <header class="header">
-        //     <div class="search-container">
-        //         <input type="text" class="search-bar" id="search-song" 
-        //                placeholder="Search for Songs, Artists, or Playlists"
-        //                onkeyup="debounceSearch(event)">
-        //         <i class="fas fa-search search-icon"></i>
-        //     </div>
-        //     <div class="user-menu">
-        //         <span id="username-display"></span>
+// <header class="header">
+//     <div class="search-container">
+//         <input type="text" class="search-bar" id="search-song" 
+//                placeholder="Search for Songs, Artists, or Playlists"
+//                onkeyup="debounceSearch(event)">
+//         <i class="fas fa-search search-icon"></i>
+//     </div>
+//     <div class="user-menu">
+//         <span id="username-display"></span>
 
-        //         <space style="margin-left: 10px;"></space>
+//         <space style="margin-left: 10px;"></space>
 
-        //         <button onclick="showUploadForm()" class="upload-btn" title="Support: MP3, WAV, OGG (max 10MB)">
-        //             <i class="fas fa-upload"></i> Upload Song
-        //         </button>
+//         <button onclick="showUploadForm()" class="upload-btn" title="Support: MP3, WAV, OGG (max 10MB)">
+//             <i class="fas fa-upload"></i> Upload Song
+//         </button>
 
-        //         <button onclick="unlogin()" class="delete-playlist-btn">
-        //             <i class="fas fa-sign-out-alt"></i> Unlogin
-        //         </button>
-        //     </div>
-        // </header>
+//         <button onclick="unlogin()" class="delete-playlist-btn">
+//             <i class="fas fa-sign-out-alt"></i> Unlogin
+//         </button>
+//     </div>
+// </header>
 
 function showMainView() {
     const mainContent = document.querySelector('.main-content');
@@ -870,16 +872,229 @@ function removeFromPlaylist(playlistId, songId, playlistName) {
 
     fetch(`${API}/playlist_music`, {
         method: 'DELETE',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({playlistId, musicId: songId})
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playlistId, musicId: songId })
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            viewPlaylist(playlistId, playlistName);
-            showNotification('Song removed from playlist');
-        } else {
-            showNotification('Failed to remove song', 'error');
-        }
-    });
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                viewPlaylist(playlistId, playlistName);
+                showNotification('Song removed from playlist');
+            } else {
+                showNotification('Failed to remove song', 'error');
+            }
+        });
 }
+
+
+
+
+
+// Глобальные переменные для отслеживания состояния
+let currentAudio = null;
+let currentUser = null;
+// let currentSong = null;
+let isAudioPlaying = false;
+
+// Функция для отправки текущего состояния прослушивания
+async function updatePlaybackState(username, currentTime = 0, songName = null, coverUrl = null, isPlaying = false) {
+    try {
+        const defaultCover = 'https://static.hitmcdn.com/static/images/no-cover-150.jpg';
+
+        const response = await fetch('/api/playback/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username,
+                currentTime: currentTime,
+                songName: songName || 'No song playing',
+                coverUrl: coverUrl || defaultCover,
+                isPlaying: isPlaying
+            })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            console.error('Failed to update playback:', data.error);
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Error updating playback state:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Функция для получения состояния прослушивания пользователя
+async function getPlaybackState(username) {
+    try {
+        const response = await fetch(`/api/playback/${encodeURIComponent(username)}`);
+        const data = await response.json();
+
+        if (!data.success) {
+            console.error('Failed to get playback:', data.error);
+            return null;
+        }
+
+        return data.playback;
+    } catch (error) {
+        console.error('Error getting playback state:', error);
+        return null;
+    }
+}
+
+// Функция для получения текущей песни (адаптируйте под вашу структуру)
+function getCurrentSong() {
+    if (!currentSong) {
+        return {
+            name: 'No song playing',
+            cover_url: 'https://static.hitmcdn.com/static/images/no-cover-150.jpg'
+        };
+    }
+    return currentSong;
+}
+
+// Функция для проверки состояния аудио
+function getAudioState() {
+    if (!currentAudio || currentAudio.paused) {
+        return {
+            isPlaying: false,
+            currentTime: 0
+        };
+    }
+
+    return {
+        isPlaying: true,
+        currentTime: currentAudio.currentTime
+    };
+}
+
+// Основная функция отслеживания
+function setupPlaybackTracking() {
+    let lastUpdateTime = 0;
+    const UPDATE_INTERVAL = 5000; // Обновлять каждые 5 секунд
+
+    setInterval(() => {
+        // Проверяем, авторизован ли пользователь
+        if (!currentUser || !currentUser.username) {
+            console.log('No user logged in, skipping playback update');
+            return;
+        }
+
+        const currentTime = Date.now();
+
+        // Обновляем только если прошло достаточно времени
+        if (currentTime - lastUpdateTime >= UPDATE_INTERVAL) {
+            const audioState = getAudioState();
+            const song = getCurrentSong();
+
+            updatePlaybackState(
+                currentUser.username,
+                audioState.currentTime,
+                song.name,
+                song.cover_url,
+                audioState.isPlaying
+            );
+
+            lastUpdateTime = currentTime;
+            console.log('Playback state updated:', {
+                user: currentUser.username,
+                playing: audioState.isPlaying,
+                song: song.name,
+                time: audioState.currentTime
+            });
+        }
+    }, 1000); // Проверяем каждую секунду
+}
+
+// Функция для установки текущего аудио (вызывайте её при смене песни)
+function setCurrentAudio(audioElement, songData = null) {
+    currentAudio = audioElement;
+    currentSong = songData;
+
+    if (audioElement) {
+        // Отслеживаем события воспроизведения/паузы
+        audioElement.addEventListener('play', () => {
+            isAudioPlaying = true;
+            if (currentUser) {
+                updatePlaybackState(
+                    currentUser.username,
+                    audioElement.currentTime,
+                    currentSong?.name,
+                    currentSong?.cover_url,
+                    true
+                );
+            }
+        });
+
+        audioElement.addEventListener('pause', () => {
+            isAudioPlaying = false;
+            if (currentUser) {
+                updatePlaybackState(
+                    currentUser.username,
+                    audioElement.currentTime,
+                    currentSong?.name,
+                    currentSong?.cover_url,
+                    false
+                );
+            }
+        });
+
+        audioElement.addEventListener('ended', () => {
+            isAudioPlaying = false;
+            if (currentUser) {
+                updatePlaybackState(
+                    currentUser.username,
+                    0,
+                    'No song playing',
+                    'https://static.hitmcdn.com/static/images/no-cover-150.jpg',
+                    false
+                );
+            }
+        });
+    }
+}
+
+// Функция для установки текущего пользователя (вызывайте при логине)
+function setCurrentUser(user) {
+    currentUser = user;
+    if (user && user.username) {
+        console.log('User set for playback tracking:', user.username);
+    }
+}
+
+// Функция для сброса состояния (вызывайте при логауте)
+function resetPlaybackState() {
+    if (currentUser) {
+        // Отправляем состояние "не играет" перед выходом
+        updatePlaybackState(
+            currentUser.username,
+            0,
+            'No song playing',
+            'https://static.hitmcdn.com/static/images/no-cover-150.jpg',
+            false
+        );
+    }
+    currentUser = null;
+    currentAudio = null;
+    currentSong = null;
+    isAudioPlaying = false;
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function () {
+    // localStorage.getItem('token', token);
+    
+    
+
+    currentUser = { username: localStorage.getItem('username', username), userId: localStorage.getItem('userId', userId) };
+
+    // Ждём немного перед инициализацией, чтобы всё загрузилось
+    setTimeout(() => {
+        setupPlaybackTracking();
+        console.log('Playback tracking initialized');
+    }, 2000);
+});

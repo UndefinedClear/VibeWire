@@ -251,6 +251,110 @@ app.get('/assets/:filename', (req, res) => {
   res.sendFile(path_);
 });
 
+// Эндпоинт для отправки текущего состояния прослушивания
+app.post('/api/playback/update', (req, res) => {
+  const { username, currentTime, songName, coverUrl, isPlaying } = req.body;
+  
+  // Валидация данных
+  if (!username) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Missing required field: username' 
+    });
+  }
+
+  const safeUsername = sanitizeInput(username);
+  const safeSongName = songName ? sanitizeInput(songName) : 'No song playing';
+  const safeCoverUrl = coverUrl ? sanitizeInput(coverUrl) : 'https://static.hitmcdn.com/static/images/no-cover-150.jpg';
+  const playbackTime = isPlaying ? (currentTime || 0) : 0;
+
+  // Сохраняем в базе данных
+  db.run(
+    `CREATE TABLE IF NOT EXISTS user_playback (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      current_time REAL DEFAULT 0,
+      song_name TEXT,
+      cover_url TEXT,
+      is_playing INTEGER DEFAULT 0,
+      last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`,
+    (err) => {
+      if (err) {
+        console.error('Error creating playback table:', err);
+        return res.status(500).json({ success: false, error: 'Database error' });
+      }
+
+      // Обновляем или вставляем запись
+      db.run(
+        `INSERT OR REPLACE INTO user_playback 
+         (username, current_time, song_name, cover_url, is_playing, last_updated) 
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [safeUsername, playbackTime, safeSongName, safeCoverUrl, isPlaying ? 1 : 0],
+        function(err) {
+          if (err) {
+            console.error('Error updating playback:', err);
+            return res.status(500).json({ success: false, error: 'Failed to update playback' });
+          }
+          
+          res.json({ 
+            success: true, 
+            message: 'Playback updated successfully',
+            id: this.lastID
+          });
+        }
+      );
+    }
+  );
+});
+
+// Эндпоинт для получения текущего состояния прослушивания
+app.get('/api/playback/:username', (req, res) => {
+  const username = req.params.username;
+  const safeUsername = sanitizeInput(username);
+
+  db.get(
+    `SELECT username, current_time as currentTime, song_name as songName, 
+            cover_url as coverUrl, is_playing as isPlaying, last_updated as lastUpdated
+     FROM user_playback 
+     WHERE username = ?`,
+    [safeUsername],
+    (err, row) => {
+      if (err) {
+        console.error('Error fetching playback:', err);
+        return res.status(500).json({ success: false, error: 'Database error' });
+      }
+
+      if (!row) {
+        // Если данных нет, возвращаем состояние "не играет"
+        return res.json({
+          success: true,
+          playback: {
+            username: safeUsername,
+            currentTime: 0,
+            songName: 'No song playing',
+            coverUrl: 'https://static.hitmcdn.com/static/images/no-cover-150.jpg',
+            isPlaying: false,
+            lastUpdated: new Date().toISOString()
+          }
+        });
+      }
+
+      res.json({
+        success: true,
+        playback: {
+          username: row.username,
+          currentTime: row.currentTime,
+          songName: row.songName,
+          coverUrl: row.coverUrl,
+          isPlaying: Boolean(row.isPlaying),
+          lastUpdated: row.lastUpdated
+        }
+      });
+    }
+  );
+});
+
 // Get all music
 app.get('/music', (req, res) => {
   const query = req.query.search;
